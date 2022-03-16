@@ -40,6 +40,16 @@ $ export GMAIL_USER your-gmail@gmail.com
 $ export GMAIL_PASSWORD you-gmail-app-password
 $ ./gsmtp
 ```
+
+We provided a `localhost.pem` and `localhost.key`, for you to test. to use it, please run with
+```sh
+$ ./gsmtp -tls-cert localhost.pem -tls-key localhost.key
+```
+
+If you don't want to bind default host or port, use
+```sh
+$ ./gsmtp -bind 172.20.0.3 -port 10025 -secure-port 10465 -tls-cert localhost.pem -tls-key localhost.key
+```
 # Behavior
 It will inject login credential to google automatically after first succesful `HELO` or `EHLO` call.
 
@@ -48,3 +58,4 @@ Configure your mail client as no auth.
 Port 25 by default is the plain port
 Port 465 is the TLS port (to use this, you need to have a tls cert and key, then pass the file name with the
 command line switch)
+

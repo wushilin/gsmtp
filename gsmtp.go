@@ -50,6 +50,11 @@ func main() {
 	flag.Parse()
 	printFlags()
 
+	if gmail_user == "" || gmail_password == "" {
+		log.Printf("NEED GMAIL_USERNAME and GMAIL_PASSWORD. you can do:" +
+			"\n  export GMAIL_USERNAME=xxxx\n  export GMAIL_PASSWORD=yyy")
+		log.Fatal("Please specify a GMAIL_USERNAME and GMAIL_PASSWORD using environment variable")
+	}
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		// This goroutine executes a blocking receive for

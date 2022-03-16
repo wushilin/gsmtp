@@ -1,3 +1,3 @@
 module github.com/wushilin/gsmtp
 
-go 1.17
+go 1.12

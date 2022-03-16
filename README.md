@@ -12,6 +12,9 @@ You need to get a gmail application password first.
 See https://support.google.com/accounts/answer/185833?hl=en
 
 ## Prepare TLS
+Generate your key and certs in openssl, or alternatively, checkout
+
+https://github.com/wushilin/minica
 
 ## Getting help
 You can run with `-h` switch to see what is supported
@@ -56,6 +59,7 @@ It will inject login credential to google automatically after first succesful `H
 Configure your mail client as no auth. 
 
 Port 25 by default is the plain port
-Port 465 is the TLS port (to use this, you need to have a tls cert and key, then pass the file name with the
-command line switch)
+
+Port 465 is the TLS port. To use this, you need to have a tls cert and key, then pass the file name with the
+command line switch (see example above)
 

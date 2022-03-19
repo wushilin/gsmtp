@@ -233,6 +233,8 @@ func handleConn(conn net.Conn, wg *sync.WaitGroup) {
 	nwg.Wait()
 }
 
+// Setup a pipe, read from a reader and write to writer immediately.
+// After it is done, reduce wait group by 1
 func pipe(r io.ReadCloser, w io.WriteCloser, wg *sync.WaitGroup) {
 	defer wg.Done()
 	buff := make([]byte, 1024)
@@ -251,6 +253,7 @@ func pipe(r io.ReadCloser, w io.WriteCloser, wg *sync.WaitGroup) {
 		}
 	}
 }
+
 func readLineFrom(reader *bufio.Reader, buffer []byte) (string, error) {
 	readCount := 0
 	remaining := len(buffer)
@@ -270,17 +273,23 @@ func readLineFrom(reader *bufio.Reader, buffer []byte) (string, error) {
 	}
 	return string(buffer[:readCount]), nil
 }
+
+// Copy bytes from src to dest, start at srcOffset and destOffset, for count bytes
 func copyBytes(dest []byte, destOffset int, src []byte, srcOffset int, count int) {
 	for i := 0; i < count; i++ {
 		dest[destOffset+i] = src[srcOffset+i]
 	}
 }
+
+// Find the smaller item in the two
 func min(a1 int, a2 int) int {
 	if a1 < a2 {
 		return a1
 	}
 	return a2
 }
+
+// Convert a user + password => base64('\0' + user + '\0' + password)
 func genCredential(user string, pass string) string {
 	userBytes := []byte(user)
 	passBytes := []byte(pass)

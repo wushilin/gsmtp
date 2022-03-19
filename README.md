@@ -1,4 +1,9 @@
 # gsmtp
+GSMTP => Go Simple Mail Transfer Protocol
+
+It transparently act as a simple local mail server (not authentication required), and does the tunning to 
+GMAIL SMTP and does the authentication for you.
+
 Local SMTP that sends mail through gmail without authentication. Why?
 
 Postfix and Exim configuration are quite complicated, and 90% of the hosts don't need them.

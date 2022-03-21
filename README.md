@@ -1,7 +1,7 @@
 # gsmtp
 GSMTP => Go Simple Mail Transfer Protocol
 
-It transparently act as a simple local mail server (not authentication required), and does the tunning to 
+It transparently act as a simple local mail server (not authentication required), and does the tunneling to 
 GMAIL SMTP and does the authentication for you.
 
 Local SMTP that sends mail through gmail without authentication. Why?

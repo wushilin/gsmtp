@@ -111,11 +111,17 @@ key_file: key1
 Parameters can be override by env variables. See comments below.
 
 gmail_username: The gmail sender address. Can be override by `GMAIL_USERNAME`
+
 gmail_password: The gmail app password. Can be override by `GMAIL_PASSWORD`
+
 port: The plaintext port to use. Can be override by `PORT`. Default is `25`
+
 tls_port: The secure port to use. Can be override by `TLS_PORT`. Default is `465`
+
 bind_address: The bind address of the service. Can be override by `BIND`. Default is `127.0.0.1`
+
 cert_file: TLS Cert file path. Can be override by `CERT_FILE`. Default is ""
+
 key_file: TLS Key file path. Can be override by `KEY_FILE`. Default is ""
 
 Secure port is not enabled unless both `cert_file` and `key_file` are provided.

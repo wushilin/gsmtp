@@ -28,18 +28,15 @@ type Config struct {
 	BindAddress   string `yaml:"bind_address" env:"BIND" env-default:"127.0.0.1"`
 	CertFile      string `yaml:"cert_file" env:"CERT_FILE" env-default:""`
 	KeyFile       string `yaml:"key_file" env:"KEY_FILE" env-default:""`
-	Verbose       bool   `yaml:"verbose" env:"VERBOSE" env-default:"false"`
 }
 
 var cfg Config
 
-var sequence int64 = 0
 var port_number = -1
 var secure_port_number = -1
 var bind_address = ""
 var cert = ""
 var key = ""
-var verbose = false
 
 var sigs = make(chan os.Signal, 1)
 var stop = false
@@ -70,7 +67,6 @@ func printConfig(cfg Config) {
 	log.Printf("Secure Port   : %d", cfg.TLSPortNumber)
 	log.Printf("TLS Cert File : %s", cfg.CertFile)
 	log.Printf("TLS Key File  : %s", cfg.KeyFile)
-	log.Printf("Verbose Log   : %t", cfg.Verbose)
 }
 
 func main() {
@@ -107,7 +103,6 @@ func main() {
 	cert = cfg.CertFile
 	key = cfg.KeyFile
 	bind_address = cfg.BindAddress
-	verbose = cfg.Verbose
 
 	if gmail_user == "" || gmail_password == "" {
 		log.Printf("NEED GMAIL_USERNAME and GMAIL_PASSWORD. you can do:" +

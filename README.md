@@ -90,37 +90,43 @@ You can run with `-h` switch to see what is supported
 ```
 ./gsmtp -h
 Usage of ./gsmtp:
-  -bind string
-        The bind address. Defaults to all interface
-  -port int
-        The smtp server port (default 25)
-  -secure-port int
-        The smtp secure port with tls (default 465)
-  -tls-cert string
-        The TLS cert
-  -tls-key string
-        The TLS Key
-  -verbose
-        Show debug or not
+  -c string
+        Config file path (default "config.yml")
 
 ```
+
+Sample `config.yml`: Refer to `config.example.yml`
+
+Example:
+```yml
+gmail_username: my-gmail@gmail.com
+gmail_password: bbbb
+port: 25
+tls_port: 455
+bind_address: 127.0.0.2
+cert_file: cert1
+key_file: key1
+```
+
+Parameters can be override by env variables. See comments below.
+
+gmail_username: The gmail sender address. Can be override by `GMAIL_USERNAME`
+gmail_password: The gmail app password. Can be override by `GMAIL_PASSWORD`
+port: The plaintext port to use. Can be override by `PORT`. Default is `25`
+tls_port: The secure port to use. Can be override by `TLS_PORT`. Default is `465`
+bind_address: The bind address of the service. Can be override by `BIND`. Default is `127.0.0.1`
+cert_file: TLS Cert file path. Can be override by `CERT_FILE`. Default is ""
+key_file: TLS Key file path. Can be override by `KEY_FILE`. Default is ""
+
+Secure port is not enabled unless both `cert_file` and `key_file` are provided.
 
 ## Running
 ```
-$ export GMAIL_USER your-gmail@gmail.com
-$ export GMAIL_PASSWORD you-gmail-app-password
-$ ./gsmtp
+$ ./gsmtp -c config.yml
 ```
 
-We provided a `localhost.pem` and `localhost.key`, for you to test. to use it, please run with
-```sh
-$ ./gsmtp -tls-cert localhost.pem -tls-key localhost.key
-```
+We provided a `localhost.pem` and `localhost.key`, for you to test.
 
-If you don't want to bind default host or port, use
-```sh
-$ ./gsmtp -bind 172.20.0.3 -port 10025 -secure-port 10465 -tls-cert localhost.pem -tls-key localhost.key
-```
 # Behavior
 It will inject login credential to google automatically after first succesful `HELO` or `EHLO` call.
 
@@ -128,6 +134,5 @@ Configure your mail client as no auth.
 
 Port 25 by default is the plain port
 
-Port 465 is the TLS port. To use this, you need to have a tls cert and key, then pass the file name with the
-command line switch (see example above)
+Port 465 is the TLS port. 
 

@@ -1,5 +1,73 @@
 # gsmtp
-Local SMTP that sends mail through gmail without authentication
+GSMTP => Go Simple Mail Transfer Protocol
+
+It transparently act as a simple local mail server (not authentication required), and does the tunneling to 
+GMAIL SMTP and does the authentication for you.
+
+Local SMTP that sends mail through gmail without authentication. Why?
+
+Postfix and Exim configuration are quite complicated, and 90% of the hosts don't need them.
+However you may still want to be able to send out emails to external on cronjob results.
+
+This program is for you.
+
+You may want to replace `/usr/sbin/sendmail` because it depends on the postfix unfortunately.
+
+Something like this will work (`mv /usr/sbin/sendmail /usr/sbin/sendmail.old`)
+
+Create /usr/sbin/sendmail with following content
+
+```perl
+#!/usr/bin/perl
+use IO::Socket::INET;
+`date >> /tmp/sendmail.log`;
+my $ARGC = 0 + @ARGV;
+my $recipient = "";
+foreach my $arg(@ARGV) {
+        if($arg =~ m/^.*\@.*$/g) {
+                $recipient = $arg;
+                last;
+        }
+}
+die "no recipient found" if not $recipient;
+
+$| = 1;
+my $socket = new IO::Socket::INET (
+    PeerHost => 'localhost',
+    PeerPort => '25',
+    Proto => 'tcp',
+);
+
+my $helo = "HELO home.wushilin.net\r\n";
+&send($socket, $helo);
+&receive($socket);
+&send($socket, "MAIL from: <wushilin.sg\@gmail.com>\r\n");
+&receive($socket);
+&send($socket, "RCPT to: <$recipient>\r\n");
+&receive($socket);
+&send($socket, "DATA\r\n");
+while(<STDIN>) {
+        chomp;
+        &send($socket, $_ . "\r\n");
+}
+&send($socket, ".\r\n");
+&receive($socket);
+&send($socket, "quit\r\n");
+&receive($socket);
+$socket->close();
+
+sub send($$) {
+        my $sock = shift;
+        my $data = shift;
+        $sock->send($data);
+}
+
+sub receive($) {
+        my $sock = shift;
+        my $response = "";
+        $sock->recv($response, 1024);
+}
+```
 
 # Building
 ```

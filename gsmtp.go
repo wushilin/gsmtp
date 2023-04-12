@@ -21,24 +21,32 @@ import (
 )
 
 type Config struct {
-	GmailUser     string `yaml:"gmail_user" env:"GMAIL_USERNAME" env-default:""`
+	GmailUser     string `yaml:"gmail_username" env:"GMAIL_USERNAME" env-default:""`
 	GmailPassword string `yaml:"gmail_password" env:"GMAIL_PASSWORD" env-default:""`
+	PortNumber    int    `yaml:"port" env:"PORT" env-default:"25"`
+	TLSPortNumber int    `yaml:"tls_port" env:"TLS_PORT" env-default:"465"`
+	BindAddress   string `yaml:"bind_address" env:"BIND" env-default:"127.0.0.1"`
+	CertFile      string `yaml:"cert_file" env:"CERT_FILE" env-default:""`
+	KeyFile       string `yaml:"key_file" env:"KEY_FILE" env-default:""`
+	Verbose       bool   `yaml:"verbose" env:"VERBOSE" env-default:"false"`
 }
 
 var cfg Config
 
 var sequence int64 = 0
-var port_number = flag.Int("port", 25, "The smtp server port")
-var secure_port_number = flag.Int("secure-port", 465, "The smtp secure port with tls")
-var bind_address = flag.String("bind", "", "The bind address. Defaults to all interface")
-var cert = flag.String("tls-cert", "", "The TLS cert")
-var key = flag.String("tls-key", "", "The TLS Key")
-var verbose = flag.Bool("verbose", false, "Show debug or not")
+var port_number = -1
+var secure_port_number = -1
+var bind_address = ""
+var cert = ""
+var key = ""
+var verbose = false
+
 var sigs = make(chan os.Signal, 1)
 var stop = false
-var gmail_user = os.Getenv("GMAIL_USERNAME")
-var gmail_password = os.Getenv("GMAIL_PASSWORD")
+var gmail_user = ""
+var gmail_password = ""
 var credential = genCredential(gmail_user, gmail_password)
+var config_file = flag.String("c", "config.yml", "Config file path")
 
 const CRLF = "\r\n"
 
@@ -46,25 +54,65 @@ var active_client_count int64 = 0
 
 const RHOST = "smtp.gmail.com:465"
 
-func printFlags() {
-	fmt.Printf("Config: port                  => %d\n", *port_number)
-	fmt.Printf("Config: secure-port           => %d\n", *secure_port_number)
-	fmt.Printf("Config: bind                  => %s\n", *bind_address)
-	fmt.Printf("Config: tls-cert              => %s\n", *cert)
-	fmt.Printf("Config: tls-key               => %s\n", *key)
-	fmt.Printf("Config: verbose               => %t\n", *verbose)
+func mask(what string) string {
+	result := ""
+	for len(result) < len(what) {
+		result = result + "*"
+	}
+	return result
+}
+
+func printConfig(cfg Config) {
+	log.Printf("Gmail User    : %s", cfg.GmailUser)
+	log.Printf("Gmail Password: %s", mask(cfg.GmailPassword))
+	log.Printf("Bind Address  : %s", cfg.BindAddress)
+	log.Printf("Listen Port   : %d", cfg.PortNumber)
+	log.Printf("Secure Port   : %d", cfg.TLSPortNumber)
+	log.Printf("TLS Cert File : %s", cfg.CertFile)
+	log.Printf("TLS Key File  : %s", cfg.KeyFile)
+	log.Printf("Verbose Log   : %t", cfg.Verbose)
 }
 
 func main() {
 	flag.Parse()
-	printFlags()
-
-	err := cleanenv.ReadConfig("config.yml", &cfg)
-	if err != nil {
-		log.Printf("Failed to load config from config.yml in the current directory. Skipping...")
+	log.Printf("Using config file: %s", *config_file)
+	stat, _ := os.Stat(*config_file)
+	file_read_success := false
+	if stat != nil {
+		err := cleanenv.ReadConfig(*config_file, &cfg)
+		if err != nil {
+			log.Printf("Failed to load config from %s in the current directory: %s. Skipping...", *config_file, err)
+		} else {
+			log.Printf("Loaded config from %s and Environment", *config_file)
+			file_read_success = true
+		}
+	} else {
+		log.Printf("Config file %s does not exist. Skipped file loading", *config_file)
 	}
+	if !file_read_success {
+		err := cleanenv.ReadEnv(&cfg)
+		if err != nil {
+			log.Printf("Failed to load from ENV: %s", err)
+		} else {
+			log.Printf("Loaded config from Environment Variables")
+		}
+	}
+
+	printConfig(cfg)
+	gmail_user = cfg.GmailUser
+	gmail_password = cfg.GmailPassword
+	port_number = cfg.PortNumber
+	secure_port_number = cfg.TLSPortNumber
+	cert = cfg.CertFile
+	key = cfg.KeyFile
+	bind_address = cfg.BindAddress
+	verbose = cfg.Verbose
+
 	if gmail_user == "" || gmail_password == "" {
 		log.Printf("NEED GMAIL_USERNAME and GMAIL_PASSWORD. you can do:" +
+			"\n  config gmail_username: xxx" +
+			"\n  config gmail_password: yyyy" +
+			"\n  in config file, or" +
 			"\n  export GMAIL_USERNAME=xxxx\n  export GMAIL_PASSWORD=yyy")
 		log.Fatal("Please specify a GMAIL_USERNAME and GMAIL_PASSWORD using environment variable")
 	}
@@ -81,8 +129,8 @@ func main() {
 		signal.Stop(sigs)
 	}()
 	var wg sync.WaitGroup
-	if *port_number != -1 {
-		listen_address := fmt.Sprintf("%s:%d", *bind_address, *port_number)
+	if port_number != -1 {
+		listen_address := fmt.Sprintf("%s:%d", bind_address, port_number)
 
 		normal, err := net.Listen("tcp", listen_address)
 		if err != nil {
@@ -92,15 +140,15 @@ func main() {
 		go handle(normal, &wg)
 	}
 
-	if *secure_port_number != -1 && *cert != "" && *key != "" {
-		x509_cert, err := tls.LoadX509KeyPair(*cert, *key)
+	if secure_port_number != -1 && cert != "" && key != "" {
+		x509_cert, err := tls.LoadX509KeyPair(cert, key)
 
 		if err != nil {
-			log.Fatalf("Failed to load cert/key pair. cert: %s key: %s, error: %s", *cert, *key, err)
+			log.Fatalf("Failed to load cert/key pair. cert: %s key: %s, error: %s", cert, key, err)
 		}
 		config := tls.Config{Certificates: []tls.Certificate{x509_cert}}
 
-		listen_address := fmt.Sprintf("%s:%d", *bind_address, *secure_port_number)
+		listen_address := fmt.Sprintf("%s:%d", bind_address, secure_port_number)
 
 		secure, err := tls.Listen("tcp", listen_address, &config)
 		if err != nil {

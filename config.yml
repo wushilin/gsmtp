@@ -1,0 +1,8 @@
+gmail_username: my-gmail@gmail.com
+gmail_password: bbbb
+port: 25
+tls_port: 455
+bind_address: 127.0.0.2
+cert_file: cert1
+key_file: key1
+verbose: true

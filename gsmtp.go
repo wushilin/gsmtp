@@ -16,7 +16,16 @@ import (
 	"sync/atomic"
 	"syscall"
 	"time"
+
+	"github.com/ilyakaznacheev/cleanenv"
 )
+
+type Config struct {
+	GmailUser     string `yaml:"gmail_user" env:"GMAIL_USERNAME" env-default:""`
+	GmailPassword string `yaml:"gmail_password" env:"GMAIL_PASSWORD" env-default:""`
+}
+
+var cfg Config
 
 var sequence int64 = 0
 var port_number = flag.Int("port", 25, "The smtp server port")
@@ -50,6 +59,10 @@ func main() {
 	flag.Parse()
 	printFlags()
 
+	err := cleanenv.ReadConfig("config.yml", &cfg)
+	if err != nil {
+		log.Printf("Failed to load config from config.yml in the current directory. Skipping...")
+	}
 	if gmail_user == "" || gmail_password == "" {
 		log.Printf("NEED GMAIL_USERNAME and GMAIL_PASSWORD. you can do:" +
 			"\n  export GMAIL_USERNAME=xxxx\n  export GMAIL_PASSWORD=yyy")

@@ -45,7 +45,7 @@ var sigs = make(chan os.Signal, 1)
 var stop = false
 var gmail_user = ""
 var gmail_password = ""
-var credential = genCredential(gmail_user, gmail_password)
+var credential = ""
 var config_file = flag.String("c", "config.yml", "Config file path")
 
 const CRLF = "\r\n"
@@ -101,6 +101,7 @@ func main() {
 	printConfig(cfg)
 	gmail_user = cfg.GmailUser
 	gmail_password = cfg.GmailPassword
+	credential = genCredential(gmail_user, gmail_password)
 	port_number = cfg.PortNumber
 	secure_port_number = cfg.TLSPortNumber
 	cert = cfg.CertFile
